@@ -1,0 +1,116 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    app.supported_locales: 'en|fr'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    ### MDS ###
+    App\Metadata\SingleFileService:
+        tags:
+            - 'webauthn.mds_service'
+        arguments:
+            - '%kernel.project_dir%'
+#
+#    mds_fido_alliance_1:
+#        class: Webauthn\MetadataService\Service\FidoAllianceCompliantMetadataService
+#        tags:
+#            - 'webauthn.mds_service'
+#        arguments:
+#            - '@Psr\Http\Message\RequestFactoryInterface'
+#            - '@Psr\Http\Client\ClientInterface'
+#            - 'https://mds3.certinfra.fidoalliance.org/execute/26448d4dacea1f180278c7ee2255a22c0f198d50252a1b46127d0ef247fc0aa7'
+#            - []
+#            - '@Webauthn\MetadataService\CertificateChain\PhpCertificateChainValidator'
+#            - 'https://mds3.certinfra.fidoalliance.org/pki/MDS3ROOT.crt'
+#
+#    mds_fido_alliance_2:
+#        class: Webauthn\MetadataService\Service\FidoAllianceCompliantMetadataService
+#        tags:
+#            - 'webauthn.mds_service'
+#        arguments:
+#            - '@Psr\Http\Message\RequestFactoryInterface'
+#            - '@Psr\Http\Client\ClientInterface'
+#            - 'https://mds3.certinfra.fidoalliance.org/execute/36750a72e20751306dfabcbad9061e7b952b37c438efe916235fc8ada1e93fa2'
+#            - []
+#            - '@Webauthn\MetadataService\CertificateChain\PhpCertificateChainValidator'
+#            - 'https://mds3.certinfra.fidoalliance.org/pki/MDS3ROOT.crt'
+#
+#    mds_fido_alliance_3:
+#        class: Webauthn\MetadataService\Service\FidoAllianceCompliantMetadataService
+#        tags:
+#            - 'webauthn.mds_service'
+#        arguments:
+#            - '@Psr\Http\Message\RequestFactoryInterface'
+#            - '@Psr\Http\Client\ClientInterface'
+#            - 'https://mds3.certinfra.fidoalliance.org/execute/8341670cecc6b6f8d32cfabcd1ba1aa16eeb6062934a171b706144dc379918e2'
+#            - []
+#            - '@Webauthn\MetadataService\CertificateChain\PhpCertificateChainValidator'
+#            - 'https://mds3.certinfra.fidoalliance.org/pki/MDS3ROOT.crt'
+#
+#    mds_fido_alliance_4:
+#        class: Webauthn\MetadataService\Service\FidoAllianceCompliantMetadataService
+#        tags:
+#            - 'webauthn.mds_service'
+#        arguments:
+#            - '@Psr\Http\Message\RequestFactoryInterface'
+#            - '@Psr\Http\Client\ClientInterface'
+#            - 'https://mds3.certinfra.fidoalliance.org/execute/8654399fb85390b4f600a6c43088975dbdf74ca6c2dc17066657f01b0c722250'
+#            - []
+#            - '@Webauthn\MetadataService\CertificateChain\PhpCertificateChainValidator'
+#            - 'https://mds3.certinfra.fidoalliance.org/pki/MDS3ROOT.crt'
+#
+#    mds_fido_alliance_5:
+#        class: Webauthn\MetadataService\Service\FidoAllianceCompliantMetadataService
+#        tags:
+#            - 'webauthn.mds_service'
+#        arguments:
+#            - '@Psr\Http\Message\RequestFactoryInterface'
+#            - '@Psr\Http\Client\ClientInterface'
+#            - 'https://mds3.certinfra.fidoalliance.org/execute/fafc34efeb5b350f76cb93b7b0cef6d017ee8d8286fa4ec66a1e998dee6707c6'
+#            - []
+#            - '@Webauthn\MetadataService\CertificateChain\PhpCertificateChainValidator'
+#            - 'https://mds3.certinfra.fidoalliance.org/pki/MDS3ROOT.crt'
+
+    fido_alliance:
+        class: Webauthn\MetadataService\Service\FidoAllianceCompliantMetadataService
+        tags:
+            - 'webauthn.mds_service'
+        arguments:
+            - '@Psr\Http\Message\RequestFactoryInterface'
+            - '@Psr\Http\Client\ClientInterface'
+            - 'https://mds.fidoalliance.org/'
+            - []
+            - '@Webauthn\MetadataService\CertificateChain\PhpCertificateChainValidator'
+            - 'https://secure.globalsign.com/cacert/root-r3.crt'
+
+    App\Repository\MetadataStatementRepository:
+        arguments:
+            - '@cache.app'
+
+    ### MDS ###
+
+    App\Cache\LoadMetadataStatementsAndStatusReports:
+        arguments:
+            - '@App\Repository\MetadataStatementRepository'
+            - '@App\Repository\StatusReportRepository'
+            - !tagged_iterator webauthn.mds_service

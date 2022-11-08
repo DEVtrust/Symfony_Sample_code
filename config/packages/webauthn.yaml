@@ -1,0 +1,43 @@
+# Please see the following page for more information: https://webauthn-doc.spomky-labs.com/the-webauthn-server/the-symfony-way#configuration
+
+webauthn:
+    credential_repository: 'App\Repository\PublicKeyCredentialSourceRepository'
+    user_repository: 'App\Repository\PublicKeyCredentialUserEntityRepository'
+    creation_profiles:
+        default:
+            rp:
+                name: '%env(RELAYING_PARTY_NAME)%' # Please adapt the env file with the correct relaying party ID or set null
+                id: '%env(RELAYING_PARTY_ID)%' # Please adapt the env file with the correct relaying party ID or set null
+            challenge_length: 32
+            timeout: 60000
+            authenticator_selection_criteria:
+                user_verification: !php/const Webauthn\AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_REQUIRED
+                require_resident_key: true
+            public_key_credential_parameters:
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_EdDSA
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_ES256K
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_ES256
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_ES384
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_ES512
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_RS256
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_RS384
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_RS512
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_PS256
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_PS384
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_PS512
+                - !php/const Cose\Algorithms::COSE_ALGORITHM_RS1
+    request_profiles:
+        default:
+            rp_id: '%env(RELAYING_PARTY_ID)%' # Please adapt the env file with the correct relaying party ID or set null
+            user_verification: !php/const Webauthn\AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_REQUIRED
+    controllers:
+        enabled: true
+        creation:
+            additional_authenticator:
+                options_path: '/profile/authenticators/add/options'
+                result_path: '/profile/authenticators/add'
+                user_entity_guesser: 'Webauthn\Bundle\Security\Guesser\CurrentUserEntityGuesser'
+    metadata:
+        enabled: true
+        mds_repository: 'App\Repository\MetadataStatementRepository'
+        status_report_repository: 'App\Repository\StatusReportRepository'
